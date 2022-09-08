@@ -1,6 +1,6 @@
-title: Skupper local server
-subtitle: Accept connections to a local process from a remote service
-github_actions_url: https://github.com/ssorj/skupper-example-local-server/actions/workflows/main.yaml
+title: Skupper Hello World using the gateway
+subtitle: Connect services running as system processes
+github_actions_url: https://github.com/ssorj/skupper-example-gateway/actions/workflows/main.yaml
 overview: |
   This example is a multi-service HTTP application deployed across a
   Kubernetes cluster and a bare-metal host or VM.
@@ -30,7 +30,8 @@ prerequisites: |
   * Access to a Kubernetes cluster, from [any provider you
     choose][kube-providers]
 
-  * XXX `pip install starlette uvicorn`
+  * The `starlette` and `uvicorn` Python modules.  To install them,
+    run `pip install starlette uvicorn`.
 
   [install-docker]: https://docs.docker.com/engine/install/
   [install-podman]: https://podman.io/getting-started/installation
@@ -77,38 +78,76 @@ steps:
             Waiting for LoadBalancer IP or hostname...
             Skupper is now installed in namespace 'hello-world'.  Use 'skupper status' to get more information.
   - title: Install the Skupper gateway
+    preamble: |
+      The `skupper gateway init` command starts a Skupper router on
+      your local system and links it to the Skupper router in the
+      current Kubernetes namespace.
     commands:
       hello-world:
         - run: skupper gateway init --type docker
         - run: sleep 2
           apply: test
+    postamble: |
+      The `--type docker` option runs the router as a Docker
+      container.  You can also run it as a Podman container (`--type
+      podman`) or as a systemd service (`--type service`).
   - title: Deploy the frontend and backend services
+    preamble: |
+      For this example, we are running the frontend on Kubernetes and
+      the backend as a local system process.
+
+      Use `kubectl create deployment` to deploy the frontend service
+      in `hello-world`.
+
+      Change to the `backend` directory and use `python
+      python/main.py` to start the backend process.  You can run this in a
+      different terminal if you prefer.
     commands:
       hello-world:
         - run: kubectl create deployment frontend --image quay.io/skupper/hello-world-frontend
           output: deployment.apps/frontend created
         - run: (cd backend && python python/main.py --host localhost --port 8081) &
-  - title: Expose the backend
+  - title: Expose the backend service
+    preamble: |
+      Use `skupper service create` to define a Skupper service called
+      `backend`.  Then use `skupper gateway bind` to attach your
+      running backend process as a target for the service.
     commands:
       hello-world:
         - run: skupper service create backend 8080
         - await: service/backend
         - run: skupper gateway bind backend localhost 8081
-  - title: Expose the frontend
+  - title: Expose the frontend service
+    preamble: |
+      Our frontend is running on Kubernetes.  Use `skupper service
+      create` and `skupper service bind` to define a Skupper service
+      and attach the frontend deployment to it.
+
+      We want to be able to connect locally as a client to the Skupper
+      frontend service.  Use `skupper gateway forward` to map local
+      port 8080 to the frontend service.
     commands:
       hello-world:
         - run: skupper service create frontend 8080
         - await: deployment/frontend
         - run: skupper service bind frontend deployment/frontend
         - await: service/frontend
-        # - run: skupper expose deployment/frontend --port 8080
         - run: skupper gateway forward frontend 8080
-  - title: Sleep
+  - title: Test the application
+    preamble: |
+      Now we're ready to try it out.  Use `curl` or a similar tool to
+      request the `http://localhost:8080/api/health` endpoint.
     commands:
       hello-world:
-        - run: sleep 86400
-  # - standard: test_the_application
-  # - standard: accessing_the_web_console
+        - run: curl http://localhost:8080/api/health
+          apply: readme
+          output: OK
+        - run: curl --fail --verbose --retry 60 --retry-connrefused --retry-delay 2 http://localhost:8080/api/health
+          apply: test
+    postamble: |
+      If everything is in order, you can now access the web interface
+      by navigating to `http://localhost:8080/` in your browser.
+  - standard: accessing_the_web_console
   - standard: cleaning_up
     commands:
       hello-world:
