@@ -320,8 +320,6 @@ def run_steps_minikube(skewer_file, debug=False):
     for site in skewer_data["sites"]:
         kubeconfigs.append(make_temp_file())
 
-    print(111, kubeconfigs)
-
     try:
         run("minikube -p skewer start")
 
