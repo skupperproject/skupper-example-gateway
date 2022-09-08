@@ -158,6 +158,13 @@ _**Console for hello-world:**_
 skupper gateway init --type docker
 ~~~
 
+_Sample output:_
+
+~~~ console
+$ skupper gateway init --type docker
+Skupper gateway: 'fancypants-jross'. Use 'skupper gateway status' to get more information.
+~~~
+
 The `--type docker` option runs the router as a Docker
 container.  You can also run it as a Podman container (`--type
 podman`) or as a systemd service (`--type service`).
@@ -186,6 +193,12 @@ _Sample output:_
 ~~~ console
 $ kubectl create deployment frontend --image quay.io/skupper/hello-world-frontend
 deployment.apps/frontend created
+
+$ (cd backend && python python/main.py --host localhost --port 8081) &
+INFO:     Started server process [208334]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://localhost:8081 (Press CTRL+C to quit)
 ~~~
 
 ## Step 7: Expose the backend service
@@ -199,6 +212,16 @@ _**Console for hello-world:**_
 ~~~ shell
 skupper service create backend 8080
 skupper gateway bind backend localhost 8081
+~~~
+
+_Sample output:_
+
+~~~ console
+$ skupper service create backend 8080
+
+
+$ skupper gateway bind backend localhost 8081
+2022/09/08 07:07:00 CREATE io.skupper.router.tcpConnector fancypants-jross-egress-backend:8080 map[address:backend:8080 host:localhost name:fancypants-jross-egress-backend:8080 port:8081 siteId:d187db66-cbda-43fe-ac3b-4be22bbad1c9]
 ~~~
 
 ## Step 8: Expose the frontend service
@@ -217,6 +240,19 @@ _**Console for hello-world:**_
 skupper service create frontend 8080
 skupper service bind frontend deployment/frontend
 skupper gateway forward frontend 8080
+~~~
+
+_Sample output:_
+
+~~~ console
+$ skupper service create frontend 8080
+
+
+$ skupper service bind frontend deployment/frontend
+
+
+$ skupper gateway forward frontend 8080
+2022/09/08 07:07:07 CREATE io.skupper.router.tcpListener fancypants-jross-ingress-frontend:8080 map[address:frontend:8080 name:fancypants-jross-ingress-frontend:8080 port:8080 siteId:d187db66-cbda-43fe-ac3b-4be22bbad1c9]
 ~~~
 
 ## Step 9: Test the application

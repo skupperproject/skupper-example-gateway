@@ -85,7 +85,9 @@ steps:
     commands:
       hello-world:
         - run: skupper gateway init --type docker
-        - run: sleep 2
+          output: |
+            Skupper gateway: 'fancypants-jross'. Use 'skupper gateway status' to get more information.
+        - run: sleep 2 # XXX
           apply: test
     postamble: |
       The `--type docker` option runs the router as a Docker
@@ -107,6 +109,11 @@ steps:
         - run: kubectl create deployment frontend --image quay.io/skupper/hello-world-frontend
           output: deployment.apps/frontend created
         - run: (cd backend && python python/main.py --host localhost --port 8081) &
+          output: |
+            INFO:     Started server process [208334]
+            INFO:     Waiting for application startup.
+            INFO:     Application startup complete.
+            INFO:     Uvicorn running on http://localhost:8081 (Press CTRL+C to quit)
   - title: Expose the backend service
     preamble: |
       Use `skupper service create` to define a Skupper service called
@@ -115,8 +122,11 @@ steps:
     commands:
       hello-world:
         - run: skupper service create backend 8080
+          output: ""
         - await: service/backend
         - run: skupper gateway bind backend localhost 8081
+          output: |
+            2022/09/08 07:07:00 CREATE io.skupper.router.tcpConnector fancypants-jross-egress-backend:8080 map[address:backend:8080 host:localhost name:fancypants-jross-egress-backend:8080 port:8081 siteId:d187db66-cbda-43fe-ac3b-4be22bbad1c9]
   - title: Expose the frontend service
     preamble: |
       Our frontend is running on Kubernetes.  Use `skupper service
@@ -129,10 +139,14 @@ steps:
     commands:
       hello-world:
         - run: skupper service create frontend 8080
+          output: ""
         - await: deployment/frontend
         - run: skupper service bind frontend deployment/frontend
+          output: ""
         - await: service/frontend
         - run: skupper gateway forward frontend 8080
+          output: |
+            2022/09/08 07:07:07 CREATE io.skupper.router.tcpListener fancypants-jross-ingress-frontend:8080 map[address:frontend:8080 name:fancypants-jross-ingress-frontend:8080 port:8080 siteId:d187db66-cbda-43fe-ac3b-4be22bbad1c9]
   - title: Test the application
     preamble: |
       Now we're ready to try it out.  Use `curl` or a similar tool to
