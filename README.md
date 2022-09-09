@@ -30,8 +30,8 @@ across cloud providers, data centers, and edge sites.
 
 ## Overview
 
-This example is a multi-service HTTP application deployed across a
-Kubernetes cluster and a bare-metal host or VM.
+This example is a basic multi-service HTTP application deployed
+across a Kubernetes cluster and a bare-metal host or VM.
 
 It contains two services:
 
@@ -60,8 +60,9 @@ using a dedicated service network.
 * Access to a Kubernetes cluster, from [any provider you
   choose][kube-providers]
 
-* The `starlette` and `uvicorn` Python modules.  To install them,
-  run `pip install starlette uvicorn`.
+* The `starlette` and `uvicorn` Python modules.  This is required to
+  run the backend service locally.  To install the modules, run `pip
+  install starlette uvicorn`.
 
 [install-docker]: https://docs.docker.com/engine/install/
 [install-podman]: https://podman.io/getting-started/installation
