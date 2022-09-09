@@ -1,6 +1,6 @@
 # Skupper Hello World using the gateway
 
-[![main](https://github.com/ssorj/skupper-example-gateway/actions/workflows/main.yaml/badge.svg)](https://github.com/ssorj/skupper-example-gateway/actions/workflows/main.yaml)
+[![main](https://github.com/skupperproject/skupper-example-gateway/actions/workflows/main.yaml/badge.svg)](https://github.com/skupperproject/skupper-example-gateway/actions/workflows/main.yaml)
 
 #### Connect services running as system processes
 
@@ -37,7 +37,7 @@ It contains two services:
 
 * A backend service that exposes an `/api/hello` endpoint.  It
   returns greetings of the form `Hi, <your-name>.  I am <my-name>
-  (<pod-name>)`.
+  (<hostname>)`.
 
 * A frontend service that sends greetings to the backend and
   fetches new greetings in response.
@@ -67,7 +67,7 @@ using a dedicated service network.
 [install-docker]: https://docs.docker.com/engine/install/
 [install-podman]: https://podman.io/getting-started/installation
 [install-kubectl]: https://kubernetes.io/docs/tasks/tools/install-kubectl/
-[kube-providers]: https://skupper.io/start/kubernetes.html#providers
+[kube-providers]: https://skupper.io/start/kubernetes.html
 
 ## Step 1: Install the Skupper command-line tool
 
@@ -97,8 +97,6 @@ The procedure for accessing a Kubernetes cluster varies by
 provider. [Find the instructions for your chosen
 provider][kube-providers] and use them to authenticate and
 configure access.
-
-[kube-providers]: https://skupper.io/start/kubernetes.html#providers
 
 ## Step 3: Set up your Kubernetes namespace
 

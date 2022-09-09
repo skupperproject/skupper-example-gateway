@@ -1,6 +1,6 @@
 title: Skupper Hello World using the gateway
 subtitle: Connect services running as system processes
-github_actions_url: https://github.com/ssorj/skupper-example-gateway/actions/workflows/main.yaml
+github_actions_url: https://github.com/skupperproject/skupper-example-gateway/actions/workflows/main.yaml
 overview: |
   This example is a basic multi-service HTTP application deployed
   across a Kubernetes cluster and a bare-metal host or VM.
@@ -9,7 +9,7 @@ overview: |
 
   * A backend service that exposes an `/api/hello` endpoint.  It
     returns greetings of the form `Hi, <your-name>.  I am <my-name>
-    (<pod-name>)`.
+    (<hostname>)`.
 
   * A frontend service that sends greetings to the backend and
     fetches new greetings in response.
@@ -37,7 +37,7 @@ prerequisites: |
   [install-docker]: https://docs.docker.com/engine/install/
   [install-podman]: https://podman.io/getting-started/installation
   [install-kubectl]: https://kubernetes.io/docs/tasks/tools/install-kubectl/
-  [kube-providers]: https://skupper.io/start/kubernetes.html#providers
+  [kube-providers]: https://skupper.io/start/kubernetes.html
 sites:
   hello-world:
     kubeconfig: ~/.kube/config-hello-world
@@ -50,8 +50,6 @@ steps:
       provider. [Find the instructions for your chosen
       provider][kube-providers] and use them to authenticate and
       configure access.
-
-      [kube-providers]: https://skupper.io/start/kubernetes.html#providers
   - title: Set up your Kubernetes namespace
     preamble: |
       Use `kubectl create namespace` to create the namespace you wish
