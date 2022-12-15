@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:skupperproject/skupper-example-hello-world.git
 	branch = main
-	commit = d83227bea79c19e77c39d0c8756115e2abda0bca
-	parent = bf08de9de86fe210ebcae8b84626993f3e4a8a97
+	commit = 6ccf687b20348ff2252b21f0e846ae7bbc7d56c8
+	parent = 6ac39893d3994d6195d0e633f29558ed7d83c783
 	method = merge
-	cmdver = 0.4.3
+	cmdver = 0.4.5
