@@ -1,6 +1,6 @@
 # Skupper Hello World using the gateway
 
-[![main](https://github.com/ssorj/skupper-example-gateway/actions/workflows/main.yaml/badge.svg)](https://github.com/ssorj/skupper-example-gateway/actions/workflows/main.yaml)
+[![main](https://github.com/skupperproject/skupper-example-gateway/actions/workflows/main.yaml/badge.svg)](https://github.com/skupperproject/skupper-example-gateway/actions/workflows/main.yaml)
 
 #### Connect services running as system processes
 
