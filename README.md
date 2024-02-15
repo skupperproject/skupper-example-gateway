@@ -1,6 +1,6 @@
 # Skupper Hello World using the gateway
 
-[![main](https://github.com/skupperproject/skupper-example-gateway/actions/workflows/main.yaml/badge.svg)](https://github.com/skupperproject/skupper-example-gateway/actions/workflows/main.yaml)
+[![main](https://github.com/ssorj/skupper-example-gateway/actions/workflows/main.yaml/badge.svg)](https://github.com/ssorj/skupper-example-gateway/actions/workflows/main.yaml)
 
 #### Connect services running as system processes
 
@@ -16,16 +16,15 @@ across cloud providers, data centers, and edge sites.
 * [Overview](#overview)
 * [Prerequisites](#prerequisites)
 * [Step 1: Install the Skupper command-line tool](#step-1-install-the-skupper-command-line-tool)
-* [Step 2: Access your Kubernetes cluster](#step-2-access-your-kubernetes-cluster)
-* [Step 3: Set up your Kubernetes namespace](#step-3-set-up-your-kubernetes-namespace)
-* [Step 4: Install Skupper in your Kubernetes namespace](#step-4-install-skupper-in-your-kubernetes-namespace)
-* [Step 5: Install the Skupper gateway](#step-5-install-the-skupper-gateway)
-* [Step 6: Deploy the frontend and backend services](#step-6-deploy-the-frontend-and-backend-services)
-* [Step 7: Expose the backend service](#step-7-expose-the-backend-service)
-* [Step 8: Expose the frontend service](#step-8-expose-the-frontend-service)
-* [Step 9: Test the application](#step-9-test-the-application)
-* [Accessing the web console](#accessing-the-web-console)
+* [Step 2: Set up your Kubernetes namespace](#step-2-set-up-your-kubernetes-namespace)
+* [Step 3: Create your Kubernetes site](#step-3-create-your-kubernetes-site)
+* [Step 4: Set up the Skupper gateway](#step-4-set-up-the-skupper-gateway)
+* [Step 5: Deploy the frontend and backend](#step-5-deploy-the-frontend-and-backend)
+* [Step 6: Expose the backend](#step-6-expose-the-backend)
+* [Step 7: Access the frontend](#step-7-access-the-frontend)
 * [Cleaning up](#cleaning-up)
+* [Summary](#summary)
+* [Next steps](#next-steps)
 * [About this example](#about-this-example)
 
 ## Overview
@@ -45,8 +44,6 @@ It contains two services:
 The frontend runs on Kubernetes and the backend runs on your local
 machine.  Skupper enables the frontend to connect to the backend
 using a dedicated service network.
-
-<!-- <img src="images/entities.svg" width="640"/> -->
 
 ## Prerequisites
 
@@ -71,9 +68,9 @@ using a dedicated service network.
 
 ## Step 1: Install the Skupper command-line tool
 
-The `skupper` command-line tool is the entrypoint for installing
-and configuring Skupper.  You need to install the `skupper`
-command only once for each development environment.
+This example uses the Skupper command-line tool to deploy Skupper.
+You need to install the `skupper` command only once for each
+development environment.
 
 On Linux or Mac, you can use the install script (inspect it
 [here][install-script]) to download and extract the command:
@@ -88,50 +85,49 @@ prompts you to add the command to your path if necessary.
 For Windows and other installation options, see [Installing
 Skupper][install-docs].
 
-[install-script]: https://github.com/skupperproject/skupper-website/blob/main/docs/install.sh
-[install-docs]: https://skupper.io/install/index.html
+[install-script]: https://github.com/skupperproject/skupper-website/blob/main/input/install.sh
+[install-docs]: https://skupper.io/install/
 
-## Step 2: Access your Kubernetes cluster
+## Step 2: Set up your Kubernetes namespace
 
-The procedure for accessing a Kubernetes cluster varies by
-provider. [Find the instructions for your chosen
-provider][kube-providers] and use them to authenticate and
-configure access.
+Open a new terminal window and log in to your cluster.  Then
+create the namespace you wish to use and set the namespace on your
+current context.
 
-## Step 3: Set up your Kubernetes namespace
+**Note:** The login procedure varies by provider.  See the
+documentation for your chosen providers:
 
-Use `kubectl create namespace` to create the namespace you wish
-to use (or use an existing namespace).  Use `kubectl config
-set-context` to set the current namespace for your session.
+* [Minikube](https://skupper.io/start/minikube.html#cluster-access)
+* [Amazon Elastic Kubernetes Service (EKS)](https://skupper.io/start/eks.html#cluster-access)
+* [Azure Kubernetes Service (AKS)](https://skupper.io/start/aks.html#cluster-access)
+* [Google Kubernetes Engine (GKE)](https://skupper.io/start/gke.html#cluster-access)
+* [IBM Kubernetes Service](https://skupper.io/start/ibmks.html#cluster-access)
+* [OpenShift](https://skupper.io/start/openshift.html#cluster-access)
 
-_**Console for hello-world:**_
+_**Kubernetes:**_
 
 ~~~ shell
+# Enter your provider-specific login command
 kubectl create namespace hello-world
 kubectl config set-context --current --namespace hello-world
 ~~~
 
-_Sample output:_
+## Step 3: Create your Kubernetes site
 
-~~~ console
-$ kubectl create namespace hello-world
-namespace/hello-world created
+A Skupper _site_ is a location where components of your
+application are running.  Sites are linked together to form a
+Skupper network for your application.
 
-$ kubectl config set-context --current --namespace hello-world
-Context "minikube" modified.
-~~~
+In Kubernetes, use `skupper init` to create a site.  This
+deploys the Skupper router and controller.  Then use `skupper
+status` to see the outcome.
 
-## Step 4: Install Skupper in your Kubernetes namespace
-
-The `skupper init` command installs the Skupper router and service
-controller in the current namespace.
-
-**Note:** If you are using Minikube, [you need to start `minikube
-tunnel`][minikube-tunnel] before you install Skupper.
+**Note:** If you are using Minikube, you need to [start minikube
+tunnel][minikube-tunnel] before you run `skupper init`.
 
 [minikube-tunnel]: https://skupper.io/start/minikube.html#running-minikube-tunnel
 
-_**Console for hello-world:**_
+_**Kubernetes:**_
 
 ~~~ shell
 skupper init
@@ -142,16 +138,20 @@ _Sample output:_
 ~~~ console
 $ skupper init
 Waiting for LoadBalancer IP or hostname...
+Waiting for status...
 Skupper is now installed in namespace 'hello-world'.  Use 'skupper status' to get more information.
 ~~~
 
-## Step 5: Install the Skupper gateway
+As you move through the steps below, you can use `skupper status` at
+any time to check your progress.
+
+## Step 4: Set up the Skupper gateway
 
 The `skupper gateway init` command starts a Skupper router on
 your local system and links it to the Skupper router in the
 current Kubernetes namespace.
 
-_**Console for hello-world:**_
+_**Kubernetes:**_
 
 ~~~ shell
 skupper gateway init --type docker
@@ -168,19 +168,19 @@ The `--type docker` option runs the router as a Docker
 container.  You can also run it as a Podman container (`--type
 podman`) or as a systemd service (`--type service`).
 
-## Step 6: Deploy the frontend and backend services
+## Step 5: Deploy the frontend and backend
 
 For this example, we are running the frontend on Kubernetes and
 the backend as a local system process.
 
 Use `kubectl create deployment` to deploy the frontend service
-in `hello-world`.
+in your Kubernetes namespace.
 
 Change to the `backend` directory and use `python
 python/main.py` to start the backend process.  You can run this in a
 different terminal if you prefer.
 
-_**Console for hello-world:**_
+_**Kubernetes:**_
 
 ~~~ shell
 kubectl create deployment frontend --image quay.io/skupper/hello-world-frontend
@@ -200,13 +200,13 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://localhost:8081 (Press CTRL+C to quit)
 ~~~
 
-## Step 7: Expose the backend service
+## Step 6: Expose the backend
 
 Use `skupper service create` to define a Skupper service called
 `backend`.  Then use `skupper gateway bind` to attach your
 running backend process as a target for the service.
 
-_**Console for hello-world:**_
+_**Kubernetes:**_
 
 ~~~ shell
 skupper service create backend 8080
@@ -216,105 +216,59 @@ skupper gateway bind backend localhost 8081
 _Sample output:_
 
 ~~~ console
-$ skupper service create backend 8080
-
-
 $ skupper gateway bind backend localhost 8081
 2022/09/08 07:07:00 CREATE io.skupper.router.tcpConnector fancypants-jross-egress-backend:8080 map[address:backend:8080 host:localhost name:fancypants-jross-egress-backend:8080 port:8081 siteId:d187db66-cbda-43fe-ac3b-4be22bbad1c9]
 ~~~
 
-## Step 8: Expose the frontend service
+## Step 7: Access the frontend
 
-Our frontend is running on Kubernetes.  Use `skupper service
-create` and `skupper service bind` to define a Skupper service
-and attach the frontend deployment to it.
+In order to use and test the application, we need external access
+to the frontend.
 
-We want to be able to connect locally as a client to the Skupper
-frontend service.  Use `skupper gateway forward` to map local
-port 8080 to the frontend service.
+Use `kubectl expose` with `--type LoadBalancer` to open network
+access to the frontend service.
 
-_**Console for hello-world:**_
+Once the frontend is exposed, use `kubectl get service/frontend`
+to look up the external IP of the frontend service.  If the
+external IP is `<pending>`, try again after a moment.
+
+Once you have the external IP, use `curl` or a similar tool to
+request the `/api/health` endpoint at that address.
+
+**Note:** The `<external-ip>` field in the following commands is a
+placeholder.  The actual value is an IP address.
+
+_**Kubernetes:**_
 
 ~~~ shell
-skupper service create frontend 8080
-skupper service bind frontend deployment/frontend
-skupper gateway forward frontend 8080
+kubectl expose deployment/frontend --port 8080 --type LoadBalancer
+kubectl get service/frontend
+curl http://<external-ip>:8080/api/health
 ~~~
 
 _Sample output:_
 
 ~~~ console
-$ skupper service create frontend 8080
+$ kubectl expose deployment/frontend --port 8080 --type LoadBalancer
+service/frontend exposed
 
+$ kubectl get service/frontend
+NAME       TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)          AGE
+frontend   LoadBalancer   10.103.232.28   <external-ip>   8080:30407/TCP   15s
 
-$ skupper service bind frontend deployment/frontend
-
-
-$ skupper gateway forward frontend 8080
-2022/09/08 07:07:07 CREATE io.skupper.router.tcpListener fancypants-jross-ingress-frontend:8080 map[address:frontend:8080 name:fancypants-jross-ingress-frontend:8080 port:8080 siteId:d187db66-cbda-43fe-ac3b-4be22bbad1c9]
-~~~
-
-## Step 9: Test the application
-
-Now we're ready to try it out.  Use `curl` or a similar tool to
-request the `http://localhost:8080/api/health` endpoint.
-
-_**Console for hello-world:**_
-
-~~~ shell
-curl http://localhost:8080/api/health
-~~~
-
-_Sample output:_
-
-~~~ console
-$ curl http://localhost:8080/api/health
+$ curl http://<external-ip>:8080/api/health
 OK
 ~~~
 
-If everything is in order, you can now access the web interface
-by navigating to `http://localhost:8080/` in your browser.
-
-## Accessing the web console
-
-Skupper includes a web console you can use to view the application
-network.  To access it, use `skupper status` to look up the URL of
-the web console.  Then use `kubectl get
-secret/skupper-console-users` to look up the console admin
-password.
-
-**Note:** The `<console-url>` and `<password>` fields in the
-following output are placeholders.  The actual values are specific
-to your environment.
-
-_**Console for hello-world:**_
-
-~~~ shell
-skupper status
-kubectl get secret/skupper-console-users -o jsonpath={.data.admin} | base64 -d
-~~~
-
-_Sample output:_
-
-~~~ console
-$ skupper status
-Skupper is enabled for namespace "hello-world" in interior mode. It is connected to 1 other site. It has 1 exposed service.
-The site console url is: <console-url>
-The credentials for internal console-auth mode are held in secret: 'skupper-console-users'
-
-$ kubectl get secret/skupper-console-users -o jsonpath={.data.admin} | base64 -d
-<password>
-~~~
-
-Navigate to `<console-url>` in your browser.  When prompted, log
-in as user `admin` and enter the password.
+If everything is in order, you can now access the web interface by
+navigating to `http://<external-ip>:8080/` in your browser.
 
 ## Cleaning up
 
 To remove Skupper and the other resources from this exercise, use
 the following commands.
 
-_**Console for hello-world:**_
+_**Kubernetes:**_
 
 ~~~ shell
 kill $(ps -ef | grep 'python python/main\.py' | awk '{print $2}') 2> /dev/null
